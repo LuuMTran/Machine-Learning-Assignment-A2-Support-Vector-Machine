@@ -1,5 +1,26 @@
 from manim import *
-
+class Presentation(Scene):
+    def construct(self):
+        tile = Text("Support Vector Machines", font_size=72).center()
+        self.play(FadeIn(tile))
+        self.wait(2)
+        self.play(FadeOut(tile))
+        definition_SVM = Text(
+            "Support Vector Machines (SVM) are supervised learning models \n"
+            "used for classification and regression tasks. "
+            "They aim to find the optimal hyperplane \n"
+            "that separates different classes in the feature space to increase the generalization. \n"
+            "It also uses kernel methods to handle non-linear data by mapping it to higher dimensions.",
+            font_size=20
+        ).move_to(ORIGIN)
+        # "They aim to find the optimal hyperplane \n that separates different classes in the feature space to increase the generalization. \n It also uses kernel methods to handle non-linear data by mapping it to higher dimensions.", font_size=20).center()
+        self.play(FadeIn(definition_SVM))
+        self.wait(5)
+        self.play(FadeOut(definition_SVM))
+        obj_function = MathTex(r"\min_{w, b} \; \frac{1}{2} \lVert w \rVert^2 + C \sum_{i=1}^{n} \max \left( 0, \; 1 - y_i \left( w^T x_i + b \right) \right)", font_size=35).center()
+        self.play(FadeIn(obj_function))
+        self.wait(5)
+        self.play(FadeOut(obj_function))
 class VisualizeSVM(ThreeDScene):
     def construct(self):
         # Set up the 3D axes
@@ -55,10 +76,11 @@ class VisualizeSVM(ThreeDScene):
             checkerboard_colors= [RED_A,RED_A],
             stroke_width=0
         )
-
         self.play(Transform(data_points, transformed_data_points),Transform(surface, transformed_surface), run_time=3)
         self.wait(2)
         self.play(FadeIn(hyperplane), run_time=1)
         self.wait(5)
         self.stop_ambient_camera_rotation()
         self.wait(0.4)
+        self.clear()
+
