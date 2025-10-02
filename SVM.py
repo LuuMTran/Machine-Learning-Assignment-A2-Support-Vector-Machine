@@ -144,60 +144,6 @@ class SimpleSVM:
         return self.X[self.alphas > 1e-8], self.y[self.alphas > 1e-8], self.alphas[self.alphas > 1e-8]
 
 
-# ---- Demo on synthetic 2D data ----
-rng = np.random.default_rng(42)
-n = 120
-# Two Gaussian blobs (not perfectly separable)
-mean1 = np.array([0.0, 0.0])
-mean2 = np.array([2.5, 2.0])
-cov = np.array([[1.0, 0.2],
-                [0.2, 1.0]])
-X_pos = rng.multivariate_normal(mean2, cov, n//2)
-X_neg = rng.multivariate_normal(mean1, cov, n//2)
-X = np.vstack([X_pos, X_neg])
-y = np.hstack([np.ones(n//2), -np.ones(n//2)])
-
-# Shuffle
-perm = rng.permutation(n)
-X, y = X[perm], y[perm]
-
-# Train SVM
-svm = SimpleSVM(C=1.0, degree=3, gamma=0.5, coef0=1.0, tol=1e-3, max_passes=10, max_iter=20000, seed=1)
-svm.fit(X, y)
-
-# Report
-sv_X, sv_y, sv_a = svm.support_vectors_()
-print(f"C = {svm.C}, degree = {svm.degree}, gamma = {svm.gamma}, coef0 = {svm.coef0}")
-print(f"b = {svm.b:.4f}")
-print(f"# support vectors = {len(sv_X)} / {len(X)}")
-
-# Training accuracy
-pred = svm.predict(X)
-acc = (pred == y).mean()
-print(f"Training accuracy = {acc*100:.2f}%")
-
-# Visualize decision boundary & margin-ish levels
-xmin, xmax = X[:,0].min()-1.0, X[:,0].max()+1.0
-ymin, ymax = X[:,1].min()-1.0, X[:,1].max()+1.0
-xx, yy = np.meshgrid(np.linspace(xmin, xmax, 300), np.linspace(ymin, ymax, 300))
-grid = np.c_[xx.ravel(), yy.ravel()]
-zz = svm.project(grid).reshape(xx.shape)
-
-plt.figure(figsize=(6,5))
-# Contour: decision boundary f(x)=0 and margins f(x)=±1 (approximate notion for kernel SVM)
-CS = plt.contour(xx, yy, zz, levels=[-1.0, 0.0, 1.0], linewidths=1.5)
-plt.clabel(CS, inline=1, fontsize=8)
-# Points
-plt.scatter(X[y==1,0], X[y==1,1], s=20, label="+1")
-plt.scatter(X[y==-1,0], X[y==-1,1], s=20, label="-1")
-# Highlight support vectors
-plt.scatter(sv_X[:,0], sv_X[:,1], s=80, facecolors='none', edgecolors='k', linewidths=1.5, label="SV")
-plt.title("SVM from scratch (Polynomial kernel)")
-plt.legend(loc="best")
-plt.tight_layout()
-plt.show()
-
-
 
 print ("Train on Iris")
 
@@ -290,6 +236,33 @@ print("Test F1 Score:", f1_score(y_test, y_pred))
 # Number of support vectors
 X_sv, y_sv, alpha_sv = svm.support_vectors_()
 print("Number of support vectors (train):", len(X_sv))
+# Draw decision boundary for first two features (for visualization)
+if X_train.shape[1] >= 2:
+    plt.figure(figsize=(6,5))
+    # Only plot using first two features
+    X_plot = X_test[:, :2]
+    y_plot = y_test
+    X_sv_plot = X_sv[:, :2]
+    plt.scatter(X_plot[y_plot==1,0], X_plot[y_plot==1,1], c='b', label='Benign (+1)')
+    plt.scatter(X_plot[y_plot==-1,0], X_plot[y_plot==-1,1], c='r', label='Malignant (-1)')
+    plt.scatter(X_sv_plot[:,0], X_sv_plot[:,1], s=80, facecolors='none', edgecolors='k', linewidths=1.5, label='Support Vectors')
+    # Decision boundary
+    xmin, xmax = X_plot[:,0].min()-0.5, X_plot[:,0].max()+0.5
+    ymin, ymax = X_plot[:,1].min()-0.5, X_plot[:,1].max()+0.5
+    xx, yy = np.meshgrid(np.linspace(xmin, xmax, 200), np.linspace(ymin, ymax, 200))
+    grid = np.c_[xx.ravel(), yy.ravel()]
+    # Pad grid to full feature size for projection
+    grid_full = np.zeros((grid.shape[0], X_test.shape[1]))
+    grid_full[:, :2] = grid
+    zz = svm.project(grid_full).reshape(xx.shape)
+    CS = plt.contour(xx, yy, zz, levels=[0.0], colors='k', linewidths=2)
+    plt.clabel(CS, inline=1, fontsize=8)
+    plt.xlabel("Feature 1 (scaled)")
+    plt.ylabel("Feature 2 (scaled)")
+    plt.title("SVM Decision Boundary on Breast Cancer (2 features)")
+    plt.legend(loc="best")
+    plt.tight_layout()
+    plt.show()
 
 
 
